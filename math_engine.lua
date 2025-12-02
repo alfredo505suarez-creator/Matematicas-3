@@ -1,3 +1,8 @@
+if not game.Players.LocalPlayer then
+    warn("Este script debe ejecutarse como LocalScript en el cliente.")
+    return
+end
+
 local tiempo = 0.25
 
 local pg = game.Players.LocalPlayer:WaitForChild("PlayerGui")
@@ -15,7 +20,7 @@ label.Text = "Listo"
 
 local function extraerNumeros(t)
     local nums = {}
-    for n in string.gmatch(t, "%-?%d+") do
+    for n in string.gmatch(t, "%-?%d+%.?%d*") do
         table.insert(nums, tonumber(n))
     end
     return nums
@@ -32,7 +37,7 @@ local ops = {
 
 local function evalExp(t)
     t = t:gsub("%s+", "")
-    local a,op,b = t:match("^(%-?%d+)([%+%-%*%/%^%%])(%-?%d+)$")
+    local a,op,b = t:match("^(%-?%d+%.?%d*)([%+%-%*%/%^%%])(%-?%d+%.?%d*)$")
     if a and op and b and ops[op] then
         return ops[op](tonumber(a), tonumber(b))
     end
@@ -75,7 +80,6 @@ local function encontrarPregunta()
     return candidatos[1]
 end
 
-local vim = game:GetService("VirtualInputManager")
 local function pulsarRespuesta(valor)
     valor = tostring(valor)
     for _,d in ipairs(pg:GetDescendants()) do
@@ -85,11 +89,6 @@ local function pulsarRespuesta(valor)
                 label.Text = "Respondiendo: "..valor
                 wait(tiempo)
                 pcall(function() d:Activate() end)
-                local abs = d.AbsolutePosition
-                local size = d.AbsoluteSize
-                local cx, cy = abs.X + size.X/2, abs.Y + size.Y/2
-                vim:SendMouseButtonEvent(cx, cy, 0, true, d, 0)
-                vim:SendMouseButtonEvent(cx, cy, 0, false, d, 0)
                 return true
             end
         end
@@ -117,7 +116,7 @@ local function resolver(texto)
     return nil
 end
 
-spawn(function()
+task.spawn(function()
     while true do
         local p = encontrarPregunta()
         if p then
@@ -127,11 +126,4 @@ spawn(function()
                 label.Text = "Respuesta: "..tostring(ans)
                 pulsarRespuesta(ans)
             else
-                label.Text = "No se pudo resolver"
-            end
-        else
-            label.Text = "Esperando pregunta..."
-        end
-        wait(tiempo)
-    end
-end)
+                label.Text = "No se pudo resolver
